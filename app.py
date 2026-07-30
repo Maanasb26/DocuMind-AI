@@ -5,9 +5,12 @@ import os
 
 app = Flask(__name__)
 
+# Initialize document processor
 processor = DocumentProcessor()
 
-pipeline = RAGPipeline()
+# Do NOT initialize pipeline at startup.
+# It will be created only after a PDF is uploaded.
+pipeline = None
 
 
 @app.route("/")
@@ -20,10 +23,19 @@ def upload():
 
     global pipeline
 
+    if "pdf" not in request.files:
+        return jsonify({
+            "status": "error",
+            "message": "No PDF uploaded."
+        }), 400
+
     file = request.files["pdf"]
 
-    if not file:
-        return jsonify({"error": "No file uploaded"}), 400
+    if file.filename == "":
+        return jsonify({
+            "status": "error",
+            "message": "No file selected."
+        }), 400
 
     os.makedirs("uploads", exist_ok=True)
 
@@ -36,35 +48,42 @@ def upload():
 
     chunks = processor.process_pdf(filepath)
 
-    # Reload the retriever so it uses the NEW vector database
+    # Now that vector_db exists,
+    # create the pipeline.
     pipeline = RAGPipeline()
 
     return jsonify({
-
         "status": "success",
-
         "chunks": chunks
-
     })
 
 
 @app.route("/ask", methods=["POST"])
 def ask():
 
+    global pipeline
+
+    if pipeline is None:
+
+        return jsonify({
+            "answer": "Please upload a PDF first."
+        })
+
     data = request.get_json()
 
-    question = data["question"]
+    question = data.get("question", "").strip()
+
+    if question == "":
+        return jsonify({
+            "answer": "Please enter a question."
+        })
 
     answer = pipeline.ask(question)
 
     return jsonify({
-
         "answer": answer
-
     })
 
-
-import os
 
 if __name__ == "__main__":
     app.run(
