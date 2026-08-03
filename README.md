@@ -36,27 +36,7 @@ https://documind-ai-ii0p.onrender.com/
 
 ---
 
-# 📸 Screenshots
 
-> Add screenshots here after deployment.
-
-## Home Page
-
-![Home](screenshots/home.png)
-
----
-
-## Upload PDF
-
-![Upload](screenshots/upload.png)
-
----
-
-## Chat Interface
-
-![Chat](screenshots/chat.png)
-
----
 
 # ✨ Features
 
